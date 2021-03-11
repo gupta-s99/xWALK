@@ -7,6 +7,6 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
 import pathlib
-dataset_url = "https://drive.google.com/drive/u/2/folders/1cnI4IMmvBUon3n-_3j6OfAv9lXRYkZcW"
+dataset_url = "https://drive.google.com/drive/folders/1cnI4IMmvBUon3n-_3j6OfAv9lXRYkZcW?usp=sharing"
 data_dir = tf.keras.utils.get_file('JPG', origin=dataset_url, untar=True)
 data_dir = pathlib.Path(data_dir)
