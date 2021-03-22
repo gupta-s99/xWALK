@@ -36,17 +36,19 @@ def main(argv):
 
     ## [reduce_noise]
     # Reduce the noise to avoid false circle detection
-    gray = cv.medianBlur(gray, 5)
+    # gray = cv.medianBlur(gray, 5)
     ## [reduce_noise]
 
     ## [houghcircles]
     rows = gray.shape[0]
+    print(rows)
     circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
                                param1=100, param2=30,
-                               minRadius=1, maxRadius=30)
+                               minRadius=100, maxRadius = rows)
     ## [houghcircles]
 
     ## [draw]
+    print("circles: ", circles)
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
