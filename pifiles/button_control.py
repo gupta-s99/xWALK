@@ -3,12 +3,13 @@ from picamera import PiCamera
 from time import sleep
 import pygame
 
+pygame.mixer.pre_init(44100,16,2,4096)
 pygame.mixer.init()
 
 
 
 
-pygame.mixer.music.load('Ready.wav')
+pygame.mixer.music.load('xWALK/pifiles/Ready.wav')
 pygame.mixer.music.play()
 while pygame.mixer.music.get_busy() == True:
   continue
