@@ -159,42 +159,27 @@ def main(argv, color="red"):
     ## [load]
 
     ## [Resize Image]
-    start = time.time()
     #want the height to be H = 200 pixels
     H = 300
     scale = src.shape[0] / H
     resized = cv.resize(src, (int(src.shape[1]/scale), int(src.shape[0]/scale)))
-    s_time = time.time() - start
-    # print("scale time: ", s_time)
     ## [Resize Image]
 
-    start = time.time()
     ## [Red Filter]
     reddened = redFilter(resized)
     ## [Red Filter]
-    r_time = time.time() - start
-    # print("red time: ", r_time)
 
-    start = time.time()
     ## [Yellow Filter]
     yellowed = yellowFilter(resized)
     ## [Yellow Filter]
-    y_time = time.time() - start
-    # print("yellow time: ", y_time)
 
-    start = time.time()
     ## [Green Filter]
     greened = greenFilter(resized)
     ## [Green Filter]
-    g_time = time.time() - start
-    # print("green time: ", g_time)
 
-    start = time.time()
     ## [Red, Yellow and Green Filter]
     ryg = rygFilter(resized)
     ## [Red, Yellow, and Green Filter]
-    ryg_time = time.time() - start
-    # print("ryg time: ", ryg_time)
 
     ## [Red, Yellow and Green + White Filter]
     rygw = rygwFilter(resized)
@@ -233,11 +218,8 @@ def main(argv, color="red"):
                                param1=100, param2=20,
                                minRadius=(int(H/100)), maxRadius = 50)
     ## [houghcircles]
-    hough_time = time.time() - start
-    # print("hough time:", hough_time)
 
     ## [draw]
-    # print("circles: ", circles)
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
