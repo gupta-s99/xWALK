@@ -5,6 +5,8 @@ import os
 import tensorflow as tf
 from glob import glob
 import sys
+from PIL import Image
+import cv2
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
@@ -32,24 +34,27 @@ def load_graph():
 
     detection_graph = tf.Graph()
     with detection_graph.as_default():
-        od_graph_def = tf.GraphDef()
-        with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
-            serialized_graph = fid.read()
-            od_graph_def.ParseFromString(serialized_graph)
-            tf.import_graph_def(od_graph_def, name='')
+        od_graph_def = tf.compat.v1.GraphDef
+        with tf.io.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
+            graph_def = tf.compat.v1.GraphDef()
+            graph_def.ParseFromString(fid.read())
 
-    return detection_graph
+        with tf.Graph().as_default() as graph:
+            tf.import_graph_def(graph_def, name="")
+            #serialized_graph = fid.read()
+            #od_graph_def.ParseFromString(serialized_graph)
+            #tf.import_graph_def(od_graph_def, name='')
+    return graph
+    #return detection_graph
 
 def select_boxes(boxes, classes, scores, score_threshold=0, target_class=10):
     """
-
     :param boxes:
     :param classes:
     :param scores:
     :param target_class: default traffic light id in COCO dataset is 10
     :return:
     """
-
     sq_scores = np.squeeze(scores)
     sq_classes = np.squeeze(classes)
     sq_boxes = np.squeeze(boxes)
@@ -63,9 +68,9 @@ class TLClassifier(object):
 
         self.detection_graph = load_graph()
         self.extract_graph_components()
-        self.sess = tf.Session(graph=self.detection_graph)
+        self.sess = tf.compat.v1.Session(graph=self.detection_graph)
 
-        # run the first session to "warm up"
+        #running the first session to "warm up"
         dummy_image = np.zeros((100, 100, 3))
         self.detect_multi_object(dummy_image,0.1)
         self.traffic_light_box = None
@@ -90,7 +95,6 @@ class TLClassifier(object):
         :param score_threshold:
         :return:
         """
-
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
@@ -103,3 +107,41 @@ class TLClassifier(object):
                                  score_threshold=score_threshold, target_class=10)
 
         return sel_boxes
+
+def crop_roi_image(image_np, sel_box):
+    im_height, im_width, _ = image_np.shape
+    (left, right, top, bottom) = (sel_box[1] * im_width, sel_box[3] * im_width,
+                                  sel_box[0] * im_height, sel_box[2] * im_height)
+    cropped_image = image_np[int(top):int(bottom), int(left):int(right), :]
+    return cropped_image
+    
+
+# images_path = "JPG/"
+# images_list = os.listdir(images_path)
+# count = 0
+# for image in images_list: 
+#     img = cv2.imread(os.path.join(images_path, image))
+#     image_np = np.asarray(im)
+#     plt.imshow(image_np)
+#     plt.show()
+# ztlc=TLClassifier()
+
+# boxes=tlc.detect_multi_object(image_np,score_threshold=0.2)
+# cropped_image=crop_roi_image(image_np,boxes[0])
+# plt.imshow(cropped_image)
+# plt.show()
+    
+    
+test_file = "JPG/IMG_1648.jpg"
+
+im = Image.open(test_file)
+image_np = np.asarray(im)
+plt.imshow(image_np)
+plt.show()
+
+tlc=TLClassifier()
+
+boxes=tlc.detect_multi_object(image_np,score_threshold=0.2)
+cropped_image=crop_roi_image(image_np,boxes[0])
+plt.imshow(cropped_image)
+plt.show()

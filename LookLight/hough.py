@@ -58,12 +58,6 @@ def greenFilter(image):
     green_upper = np.array([85, 255,255])
     mask_green = cv.inRange(hsv, green_lower, green_upper)
 
-    # #Range for White
-    # lower_white = np.array([0,0,0], dtype=np.uint8)
-    # upper_white = np.array([0,255,255], dtype=np.uint8)
-    # mask_white = cv.inRange(hsv, lower_white, upper_white)
-
-    # mask_green = mask_green + mask_white
     green_output = cv.bitwise_and(image, image, mask=mask_green)
 
     return green_output
@@ -131,8 +125,25 @@ def rygwFilter(image):
     rygw_output = cv.bitwise_and(image, image, mask=combined_mask)
     return rygw_output
 
+# buggy output -> not quite an image...
+def histEqual(image):
+    # img = cv.imread('fingerptint.jpg', cv.IMREAD_UNCHANGED)
+    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    dst = cv.equalizeHist(image)
+    cv.imshow("equalized image", dst)
+    cv.waitKey(0)
+    return dst
 
-def main(argv):
+# INTENSITY THRESHOLDING ALGORITHM HERE
+def intensityThresh(gray, threshold = 0):
+
+    ret,thresh1 = cv.threshold(gray,threshold,255,cv.THRESH_TOZERO)
+    return thresh1
+
+
+
+
+def main(argv, color="red"):
     ## [load]
     default_file = 'smarties.png'
     filename = argv[0] if len(argv) > 0 else default_file
@@ -148,50 +159,43 @@ def main(argv):
     ## [load]
 
     ## [Resize Image]
-    start = time.time()
     #want the height to be H = 200 pixels
-    H = 200
+    H = 300
     scale = src.shape[0] / H
     resized = cv.resize(src, (int(src.shape[1]/scale), int(src.shape[0]/scale)))
-    s_time = time.time() - start
-    print("scale time: ", s_time)
     ## [Resize Image]
 
-    start = time.time()
     ## [Red Filter]
     reddened = redFilter(resized)
     ## [Red Filter]
-    r_time = time.time() - start
-    print("red time: ", r_time)
 
-    start = time.time()
     ## [Yellow Filter]
     yellowed = yellowFilter(resized)
     ## [Yellow Filter]
-    y_time = time.time() - start
-    print("yellow time: ", y_time)
 
-    start = time.time()
     ## [Green Filter]
     greened = greenFilter(resized)
     ## [Green Filter]
-    g_time = time.time() - start
-    print("green time: ", g_time)
 
-    start = time.time()
     ## [Red, Yellow and Green Filter]
     ryg = rygFilter(resized)
     ## [Red, Yellow, and Green Filter]
-    ryg_time = time.time() - start
-    print("ryg time: ", ryg_time)
 
     ## [Red, Yellow and Green + White Filter]
     rygw = rygwFilter(resized)
     ## [Red, Yellow, and Green + White Filter]
 
-    filtered = ryg
-    cv.imshow("filtered image", filtered)
-    cv.waitKey(0)
+    if (color == "red"):
+        filtered = reddened
+    elif (color == "yellow"):
+        filtered = yellowed
+    elif (color == "green"):
+        filtered = greened
+    else:
+        filtered = ryg
+
+    # cv.imshow("filtered image", filtered)
+    # cv.waitKey(0)
 
     start = time.time()
     ## [convert_to_gray]
@@ -199,9 +203,13 @@ def main(argv):
     gray = cv.cvtColor(filtered, cv.COLOR_BGR2GRAY)
     ## [convert_to_gray]
 
+    gray = intensityThresh(gray, threshold = 0)
+    # cv.imshow("thresholded image", gray)
+    # cv.waitKey(0)
+
     ## [reduce_noise]
     # Reduce the noise to avoid false circle detection
-    gray = cv.medianBlur(gray, 5)
+    gray = cv.medianBlur(gray, 15)
     ## [reduce_noise]
     
     ## [houghcircles]
@@ -210,11 +218,8 @@ def main(argv):
                                param1=100, param2=20,
                                minRadius=(int(H/100)), maxRadius = 50)
     ## [houghcircles]
-    hough_time = time.time() - start
-    print("hough time:", hough_time)
 
     ## [draw]
-    print("circles: ", circles)
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
@@ -227,12 +232,26 @@ def main(argv):
     ## [draw]
 
     ## [display]
-    cv.imshow("detected circles", resized)
-    cv.waitKey(0)
+    # cv.imshow("detected circles", resized)
+    # cv.waitKey(0)
     ## [display]
 
-    return 0
+    return circles
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    overall_start = time.time()
+    r_circles = main(sys.argv[1:], color="red")
+    y_circles = main(sys.argv[1:], color="yellow")
+    g_circles = main(sys.argv[1:], color="green")
+    num_circles = 0
+    color_out = "none"
+    if g_circles is not None and len(g_circles) > num_circles:
+        color_out = "green"
+    if y_circles is not None and len(y_circles) >= num_circles:
+        color_out = "yellow"
+    if r_circles is not None and len(r_circles) >= num_circles:
+        color_out = "red"
+    print("total latency:", str(time.time() - overall_start))
+    sys.stdout.write(color_out)
+
