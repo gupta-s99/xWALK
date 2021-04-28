@@ -13,27 +13,27 @@ starttime = time.time()
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
-DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
+#DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
 
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
 model_path = "./"
 PATH_TO_CKPT = model_path + MODEL_NAME + '/frozen_inference_graph.pb'
 
-def download_model():
-    import six.moves.urllib as urllib
-    import tarfile
+# def download_model():
+#     import six.moves.urllib as urllib
+#     import tarfile
 
-    opener = urllib.request.URLopener()
-    opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
-    tar_file = tarfile.open(MODEL_FILE)
-    for file in tar_file.getmembers():
-        file_name = os.path.basename(file.name)
-        if 'frozen_inference_graph.pb' in file_name:
-            tar_file.extract(file, os.getcwd())
+#     opener = urllib.request.URLopener()
+#     opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
+#     tar_file = tarfile.open(MODEL_FILE)
+#     for file in tar_file.getmembers():
+#         file_name = os.path.basename(file.name)
+#         if 'frozen_inference_graph.pb' in file_name:
+#             tar_file.extract(file, os.getcwd())
 
 def load_graph():
-    if not os.path.exists(PATH_TO_CKPT):
-        download_model()
+    #if not os.path.exists(PATH_TO_CKPT):
+    #    download_model()
 
     detection_graph = tf.Graph()
     with detection_graph.as_default():
@@ -48,13 +48,11 @@ def load_graph():
 
 
 def select_boxes(boxes, classes, scores, score_threshold=0, target_class=10):
-    """
-    :param boxes:
-    :param classes:
-    :param scores:
-    :param target_class: default traffic light id in COCO dataset is 10
-    :return:
-    """
+    #param boxes:
+    #param classes:
+    #param scores:
+    #param target_class: default traffic light id in COCO dataset is 10
+   
     sq_scores = np.squeeze(scores)
     sq_classes = np.squeeze(classes)
     sq_boxes = np.squeeze(boxes)
@@ -267,7 +265,7 @@ def intensityThresh(gray, threshold = 0):
 
 def main(color="red"):
     filename = "trafficlight.jpg"
-    #src = "trafficlight.jpg"
+    
     src = cv.imread(cv.samples.findFile(filename), cv.IMREAD_COLOR)
     ## [Resize Image]
     #want the height to be H = 200 pixels
@@ -354,6 +352,6 @@ if __name__ == "__main__":
 
 
 endtime = time.time()
-
+print("\n")
 print("time: ",str(endtime-starttime))
 
