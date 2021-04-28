@@ -208,15 +208,14 @@ def main(argv, color="red"):
     else:
         filtered = ryg
 
-    cv.imshow("filtered image", filtered)
-    cv.waitKey(0)
+    
 
     ## [convert_to_gray]
     # Convert it to gray
     gray = cv.cvtColor(filtered, cv.COLOR_BGR2GRAY)
     ## [convert_to_gray]
 
-    gray = intensityThresh(gray, threshold = 0)
+    gray = intensityThresh(gray, threshold = 25)
     # cv.imshow("thresholded image", gray)
     # cv.waitKey(0)
 
@@ -246,6 +245,8 @@ def main(argv, color="red"):
     ## [draw]
 
     ## [display]
+    # cv.imshow("filtered image", filtered)
+    # cv.waitKey(0)
     cv.imshow("detected circles", check)
     cv.waitKey(0)
     ## [display]
@@ -260,7 +261,7 @@ if __name__ == "__main__":
     g_circles = main(sys.argv[1:], color="green")
     num_circles = 0
     color_out = "none"
-    if g_circles is not None and len(g_circles[0]) == 1:
+    if g_circles is not None and (len(g_circles[0]) == 1 or len(g_circles[0]) == 2):
         color_out = "green"
         num_circles = len(g_circles[0])
     if r_circles is not None and len(r_circles[0]) >= 1:
