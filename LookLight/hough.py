@@ -15,9 +15,14 @@ import numpy as np
 import time
 
 
-def redFilter(image):
+def redFilter(image, enable=False):
 
-    hsv = cv.cvtColor(image,cv.COLOR_BGR2HSV)
+    test = image.copy()
+    if enable == True:
+        test[:,:,0] = 0
+        test[:,:,1] = 0
+
+    hsv = cv.cvtColor(test,cv.COLOR_BGR2HSV)
 
     # Range for lower red
     red_lower = np.array([0,120,70])
@@ -31,7 +36,8 @@ def redFilter(image):
 
     mask_red = mask_red1 + mask_red2
 
-    red_output = cv.bitwise_and(image, image, mask=mask_red)
+    red_output = cv.bitwise_and(test, test, mask=mask_red)
+
     return red_output
 
 def yellowFilter(image):
@@ -47,9 +53,14 @@ def yellowFilter(image):
 
     return yellow_output
 
-def greenFilter(image):
+def greenFilter(image, enable=False):
 
-    hsv = cv.cvtColor(image,cv.COLOR_BGR2HSV)
+    test = image.copy()
+    if enable == True:
+        test[:,:,0] = 0
+        test[:,:,2] = 0
+
+    hsv = cv.cvtColor(test,cv.COLOR_BGR2HSV)
     # cv.imshow("green hsv image", hsv)
     # cv.waitKey(0)
 
@@ -58,8 +69,14 @@ def greenFilter(image):
     green_upper = np.array([85, 255,255])
     mask_green = cv.inRange(hsv, green_lower, green_upper)
 
-    green_output = cv.bitwise_and(image, image, mask=mask_green)
+    # lower_white = np.array([0,0,0], dtype=np.uint8)
+    # upper_white = np.array([0,0,255], dtype=np.uint8)
+    # mask_white = cv.inRange(hsv, lower_white, upper_white)
 
+    # mask_comb = mask_green + mask_white
+
+    green_output = cv.bitwise_and(test, test, mask=mask_green)
+    
     return green_output
 
 def rygFilter(image):
@@ -140,9 +157,6 @@ def intensityThresh(gray, threshold = 0):
     ret, thresh1 = cv.threshold(gray,threshold,255,cv.THRESH_TOZERO)
     return thresh1
 
-
-
-
 def main(argv, color="red"):
     ## [load]
     default_file = 'smarties.png'
@@ -166,7 +180,7 @@ def main(argv, color="red"):
     ## [Resize Image]
 
     ## [Red Filter]
-    reddened = redFilter(resized)
+    reddened = redFilter(resized, color == "red")
     ## [Red Filter]
 
     ## [Yellow Filter]
@@ -174,7 +188,7 @@ def main(argv, color="red"):
     ## [Yellow Filter]
 
     ## [Green Filter]
-    greened = greenFilter(resized)
+    greened = greenFilter(resized, color == "green")
     ## [Green Filter]
 
     ## [Red, Yellow and Green Filter]
@@ -194,8 +208,8 @@ def main(argv, color="red"):
     else:
         filtered = ryg
 
-    # cv.imshow("filtered image", filtered)
-    # cv.waitKey(0)
+    cv.imshow("filtered image", filtered)
+    cv.waitKey(0)
 
     ## [convert_to_gray]
     # Convert it to gray
@@ -208,31 +222,32 @@ def main(argv, color="red"):
 
     ## [reduce_noise]
     # Reduce the noise to avoid false circle detection
-    gray = cv.medianBlur(gray, 15)
+    gray = cv.medianBlur(gray, 5)
     ## [reduce_noise]
     
     ## [houghcircles]
     rows = gray.shape[0]
     circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
                                param1=100, param2=20,
-                               minRadius=(int(H/100)), maxRadius = 50)
+                               minRadius=25, maxRadius = 50)
     ## [houghcircles]
 
+    check = gray
     ## [draw]
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
             center = (i[0], i[1])
             # circle center
-            cv.circle(resized, center, 1, (0, 100, 100), 3)
+            cv.circle(check, center, 1, (0, 100, 100), 3)
             # circle outline
             radius = i[2]
-            cv.circle(resized, center, radius, (255, 0, 255), 3)
+            cv.circle(check, center, radius, (255, 0, 255), 3)
     ## [draw]
 
     ## [display]
-    # cv.imshow("detected circles", resized)
-    # cv.waitKey(0)
+    cv.imshow("detected circles", check)
+    cv.waitKey(0)
     ## [display]
 
     return circles
@@ -245,12 +260,14 @@ if __name__ == "__main__":
     g_circles = main(sys.argv[1:], color="green")
     num_circles = 0
     color_out = "none"
-    if g_circles is not None and len(g_circles) > num_circles:
+    if g_circles is not None and len(g_circles[0]) == 1:
         color_out = "green"
-    if y_circles is not None and len(y_circles) >= num_circles:
-        color_out = "yellow"
-    if r_circles is not None and len(r_circles) >= num_circles:
+        num_circles = len(g_circles[0])
+    if r_circles is not None and len(r_circles[0]) >= 1:
         color_out = "red"
+        num_circles = len(r_circles[0])
+    if y_circles is not None and len(y_circles[0]) == 1:
+        color_out = "yellow"
+        num_circles = len(y_circles[0])
     print("total latency:", str(time.time() - overall_start))
     sys.stdout.write(color_out)
-
