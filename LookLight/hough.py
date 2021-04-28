@@ -2,7 +2,7 @@
 Hough Transform File 
 adapted from OpenCV documentation for Hough Transform
 https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
-Last Updated: 9 April 2021
+Last Updated: 28 April 2021
 
 This file computes the Hough Transform on an image of traffic light(s) and uses
 the Hough Transform to determine which light (if any) is in the viewer's look
@@ -137,7 +137,7 @@ def histEqual(image):
 # INTENSITY THRESHOLDING ALGORITHM HERE
 def intensityThresh(gray, threshold = 0):
 
-    ret,thresh1 = cv.threshold(gray,threshold,255,cv.THRESH_TOZERO)
+    ret, thresh1 = cv.threshold(gray,threshold,255,cv.THRESH_TOZERO)
     return thresh1
 
 
@@ -181,9 +181,9 @@ def main(argv, color="red"):
     ryg = rygFilter(resized)
     ## [Red, Yellow, and Green Filter]
 
-    ## [Red, Yellow and Green + White Filter]
-    rygw = rygwFilter(resized)
-    ## [Red, Yellow, and Green + White Filter]
+    # ## [Red, Yellow and Green + White Filter]
+    # rygw = rygwFilter(resized)
+    # ## [Red, Yellow, and Green + White Filter]
 
     if (color == "red"):
         filtered = reddened
@@ -197,7 +197,6 @@ def main(argv, color="red"):
     # cv.imshow("filtered image", filtered)
     # cv.waitKey(0)
 
-    start = time.time()
     ## [convert_to_gray]
     # Convert it to gray
     gray = cv.cvtColor(filtered, cv.COLOR_BGR2GRAY)
