@@ -7,6 +7,9 @@ from glob import glob
 import sys
 from PIL import Image
 import cv2
+import time 
+
+starttime = time.time()
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
@@ -41,11 +44,8 @@ def load_graph():
 
         with tf.Graph().as_default() as graph:
             tf.import_graph_def(graph_def, name="")
-            #serialized_graph = fid.read()
-            #od_graph_def.ParseFromString(serialized_graph)
-            #tf.import_graph_def(od_graph_def, name='')
     return graph
-    #return detection_graph
+
 
 def select_boxes(boxes, classes, scores, score_threshold=0, target_class=10):
     """
@@ -114,34 +114,27 @@ def crop_roi_image(image_np, sel_box):
                                   sel_box[0] * im_height, sel_box[2] * im_height)
     cropped_image = image_np[int(top):int(bottom), int(left):int(right), :]
     return cropped_image
-    
-
-# images_path = "JPG/"
-# images_list = os.listdir(images_path)
-# count = 0
-# for image in images_list: 
-#     img = cv2.imread(os.path.join(images_path, image))
-#     image_np = np.asarray(im)
-#     plt.imshow(image_np)
-#     plt.show()
-# ztlc=TLClassifier()
-
-# boxes=tlc.detect_multi_object(image_np,score_threshold=0.2)
-# cropped_image=crop_roi_image(image_np,boxes[0])
-# plt.imshow(cropped_image)
-# plt.show()
-    
-    
-test_file = "JPG/IMG_1648.jpg"
+        
+test_file = "JPG/IMG_1611.jpg"
 
 im = Image.open(test_file)
 image_np = np.asarray(im)
-plt.imshow(image_np)
-plt.show()
-
 tlc=TLClassifier()
 
 boxes=tlc.detect_multi_object(image_np,score_threshold=0.2)
-cropped_image=crop_roi_image(image_np,boxes[0])
-plt.imshow(cropped_image)
-plt.show()
+
+cropworked = True
+try:  
+    cropped_image=crop_roi_image(image_np,boxes[0])
+except: 
+    cropworked = False
+    
+if cropworked:
+    plt.savefig(r'trafficlight.jpg')
+else: 
+    print("Traffic light not found")
+
+endtime = time.time()
+
+print("time: ",str(endtime-starttime))
+
