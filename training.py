@@ -184,7 +184,7 @@ def greenFilter(image, enable=False):
         test[:,:,2] = 0
 
     hsv = cv.cvtColor(test,cv.COLOR_BGR2HSV)
-    #cv.imshow("green hsv image", hsv)
+    # cv.imshow("green hsv image", hsv)
     # cv.waitKey(0)
 
     #Range for Green
@@ -288,6 +288,9 @@ def main(color="red"):
     src = cv.imread(filename, cv.IMREAD_COLOR)
     cv.imshow("input image", src)
     cv.waitKey(0)
+    
+    # Loads an image
+    src = cv.imread(cv.samples.findFile(filename), cv.IMREAD_COLOR)
 
     # Check if image is loaded fine
     if src is None:
@@ -331,7 +334,9 @@ def main(color="red"):
         filtered = greened
     else:
         filtered = ryg
-
+    
+    # pixsum = filtered.sum()
+    # print(color, pixsum)
     
 
     ## [convert_to_gray]
@@ -340,60 +345,60 @@ def main(color="red"):
     ## [convert_to_gray]
 
     gray = intensityThresh(gray, threshold = 25)
-    #cv.imshow("thresholded image", gray)
-    #cv.waitKey(0)
+    # cv.imshow("thresholded image", gray)
+    # cv.waitKey(0)
 
     ## [reduce_noise]
     # Reduce the noise to avoid false circle detection
     gray = cv.medianBlur(gray, 5)
     ## [reduce_noise]
     
-    ## [houghcircles]
-    rows = gray.shape[0]
-    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
-                               param1=100, param2=20,
-                               minRadius=25, maxRadius = 50)
-    ## [houghcircles]
+    if (color == "yellow"):
+        ## [houghcircles]
+        rows = gray.shape[0]
+        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
+                                param1=100, param2=20,
+                                minRadius=25, maxRadius = 50)
+        ## [houghcircles]
 
-    check = gray
-    ## [draw]
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        for i in circles[0, :]:
-            center = (i[0], i[1])
-            # circle center
-            cv.circle(check, center, 1, (0, 100, 100), 3)
-            # circle outline
-            radius = i[2]
-            cv.circle(check, center, radius, (255, 0, 255), 3)
-    ## [draw]
-    ## [display]
-    cv.imshow("filtered image", filtered)
-    cv.waitKey(0)
+        check = gray
+        ## [draw]
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                center = (i[0], i[1])
+                # circle center
+                cv.circle(check, center, 1, (0, 100, 100), 3)
+                # circle outline
+                radius = i[2]
+                cv.circle(check, center, radius, (255, 0, 255), 3)
+        ## [draw] 
 
-    cv.imshow("detected circles", check)
-    cv.waitKey(0)
-    ## [display]
+        ## [display]
+        # cv.imshow("detected circles", check)
+        # cv.waitKey(0)
+        ## [display]
+        output = circles
 
-    return circles
+    else: output = filtered.sum()
+    return output
 
 
 if __name__ == "__main__":
-    r_circles = main(color="red")
-    y_circles = main(color="yellow")
-    g_circles = main(color="green")
-    num_circles = 0
+    r_sum = main(sys.argv[1:], color="red")
+    y_circles = main(sys.argv[1:], color="yellow")
+    g_sum = main(sys.argv[1:], color="green")
+    pixsum = 0
     color_out = "none"
-    if g_circles is not None and (len(g_circles[0]) == 1 or len(g_circles[0]) == 2):
+    if g_sum > pixsum:
         color_out = "green"
-        num_circles = len(g_circles[0])
-    if r_circles is not None and len(r_circles[0]) >= 1:
+        pixsum = g_sum
+    if r_sum >= pixsum:
         color_out = "red"
-        num_circles = len(r_circles[0])
+        pixsum = r_sum
     if y_circles is not None and len(y_circles[0]) == 1:
         color_out = "yellow"
-        num_circles = len(y_circles[0])
-    
+    print("total latency:", str(time.time() - overall_start))
     sys.stdout.write(color_out)
 
 endtime = time.time()
